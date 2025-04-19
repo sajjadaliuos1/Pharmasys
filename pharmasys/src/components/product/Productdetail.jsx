@@ -53,7 +53,7 @@ ModuleRegistry.registerModules([
 
 const Productdetail = () => {
   const gridRef = useRef(null);
-  
+  const gridStyle = useMemo(() => ({ height: "100%", width: "100%" }), []); // Make grid take full height
   const [rowData, setRowData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
@@ -64,7 +64,7 @@ const Productdetail = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [paginationPageSize, setPaginationPageSize] = useState(10); // Default page size
   const [paginationEnabled, setPaginationEnabled] = useState(false); // Pagination disabled by default
-  
+
   // Custom filter function that only filters by invoiceId and invoiceNo
   const isExternalFilterPresent = useCallback(() => {
     return searchText.length > 0;
@@ -226,23 +226,31 @@ const Productdetail = () => {
     ],
     []
   );
-  
+
   const handlePageSizeChange = (newSize) => {
     setPaginationPageSize(newSize);
     if (gridRef.current && gridRef.current.api) {
       gridRef.current.api.paginationSetPageSize(newSize);
       gridRef.current.api.paginationGoToFirstPage();
+      // Force a re-render or update of the grid view
+      gridRef.current.api.redrawRows();
       setTimeout(() => updateRowCountDisplay(), 0);
     }
   };
-  
+
   // Toggle pagination
   const togglePagination = (checked) => {
     setPaginationEnabled(checked);
     messageApi.info(`Pagination ${checked ? 'enabled' : 'disabled'}`);
+    if (gridRef.current && gridRef.current.api) {
+      gridRef.current.api.setGridOption('pagination', checked); // Enable/disable pagination in the grid
+      if (checked) {
+        gridRef.current.api.paginationGoToFirstPage(); // Go to the first page when enabled
+      }
+    }
     setTimeout(() => updateRowCountDisplay(), 0);
   };
-  
+
   const handleExportPDF = () => {
     const fileName = prompt("Enter file name for PDF:", "invoice-data");
     if (!fileName) return;
@@ -310,7 +318,7 @@ const Productdetail = () => {
 
   const updateRowCountDisplay = useCallback(() => {
     if (!gridRef.current) return;
-    const visible = gridRef.current.api.getDisplayedRowCount();
+    const visible = gridRef.current.api.getDisplayedRowCount(); 
     const total = totalRecords;
     document.querySelector("#currentRowCount").textContent = `${visible} row${
       visible !== 1 ? "s" : ""
@@ -357,7 +365,7 @@ const Productdetail = () => {
       handleFullscreen();
     }
   };
-  
+
   const handleAddInvoice = () => {
     // Using _ as parameter name indicates it's intentionally unused
     messageApi.info('This is a demo. In a real app, this would add a new invoice.');
@@ -413,10 +421,10 @@ const Productdetail = () => {
             <Tooltip title="Toggle Pagination">
               <div style={{ display: "flex", alignItems: "center" }}>
                 <TableOutlined style={{ marginRight: "5px" }} />
-                <Switch 
-                  checked={paginationEnabled} 
-                  onChange={togglePagination} 
-                  size="small" 
+                <Switch
+                  checked={paginationEnabled}
+                  onChange={togglePagination}
+                  size="small"
                 />
               </div>
             </Tooltip>
@@ -479,7 +487,7 @@ const Productdetail = () => {
           </div>
         </div>
       ) : (
-        <div id="myGrid" style={{ height: "600px", width: "100%" }}>
+        <div id="myGrid" style={gridStyle}>
           <AgGridReact
             ref={gridRef}
             rowData={rowData}
@@ -489,10 +497,12 @@ const Productdetail = () => {
             onGridReady={onGridReady}
             rowSelection="multiple"
             isExternalFilterPresent={isExternalFilterPresent}
+         
             doesExternalFilterPass={doesExternalFilterPass}
             onFilterChanged={updateRowCountDisplay}
             pagination={paginationEnabled}
             paginationPageSize={paginationPageSize}
+            domLayout={paginationEnabled ? 'normal' : 'autoHeight'} // Adjust domLayout based on pagination
             animateRows={true}
             enableCellTextSelection={true}
           />
