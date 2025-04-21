@@ -1,4 +1,5 @@
-import { Layout, Menu } from 'antd';
+import { useState, useEffect } from 'react';
+import { Layout, Menu, Button } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
 import {
   DashboardOutlined,
@@ -11,7 +12,8 @@ import {
   AppstoreOutlined,
   ShopOutlined,
   UserOutlined,
-  ContactsOutlined
+  ContactsOutlined,
+  MenuOutlined
 } from '@ant-design/icons';
 import logo from "./../assets/images/logo.png";
 
@@ -19,15 +21,27 @@ const { Sider } = Layout;
 
 function SideMenu({ collapsed, role }) {
   const location = useLocation();
-
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   const roleMenuVisibility = {
     role1: ['dashboard', 'setup', 'supplier', 'products', 'customers', 'sales'],
     role2: ['sales', 'customers'],
     role3: ['customers', 'setup']
   };
-
+  
   const allowedMenus = roleMenuVisibility[role] || [];
-
+  
   const menuItems = [
     allowedMenus.includes('dashboard') && {
       key: '/dashboard',
@@ -88,38 +102,42 @@ function SideMenu({ collapsed, role }) {
       trigger={null}
       collapsible
       collapsed={collapsed}
+      collapsedWidth={isMobile ? 0 : 80}
+      width={200}
       breakpoint="lg"
-      collapsedWidth="80"
       style={{
         overflow: 'auto',
         height: '100vh',
-        position: 'sticky',
-        top: 0,
+        position: 'fixed',
         left: 0,
-        backgroundColor: '#001529',
+        top: 0,
+        bottom: 0,
+        zIndex: 1000,
+        transition: 'all 0.2s',
       }}
     >
-      <div style={{ height: 64, margin: 16, display: 'flex', alignItems: 'center' }}>
-        <img
-          src={logo}
-          alt="Logo"
-          style={{ width: '40px', height: '40px', marginRight: '8px' }}
-        />
-        <h1 style={{
-          color: '#fff',
-          margin: 0,
-          fontSize: collapsed ? '16px' : '20px',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          fontWeight: '500',
-        }}>
-          {collapsed ? 'PS' : 'PharmaSys'}
-        </h1>
+      <div className="logo" style={{ 
+        padding: '16px', 
+        textAlign: 'center',
+        height: '64px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: collapsed ? 'center' : 'flex-start'
+      }}>
+        {collapsed ? (
+          <h3 style={{ color: 'white', margin: 0 }}>PS</h3>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img src={logo} alt="Logo" style={{ height: '28px', marginRight: '8px' }} />
+            <h2 style={{ color: 'white', margin: 0 }}>PharmaSys</h2>
+          </div>
+        )}
       </div>
-
+      
       <Menu
         theme="dark"
         mode="inline"
+        defaultSelectedKeys={[location.pathname]}
         selectedKeys={[location.pathname]}
         items={menuItems}
       />

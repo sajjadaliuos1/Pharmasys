@@ -13,9 +13,9 @@ function Login({ onLogin }) {
     setLoading(true);
 
     const users = {
-      admin: { password: 'password', role: 'role1' },
-      manager: { password: 'password', role: 'role2' },
-      staff: { password: 'password', role: 'role3' },
+      admin: { password: '123', role: 'role1' },
+      manager: { password: '123', role: 'role2' },
+      staff: { password: '123', role: 'role3' },
     };
 
     setTimeout(() => {
