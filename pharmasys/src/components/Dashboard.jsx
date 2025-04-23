@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { Layout, Alert, Button } from 'antd';
-import { MenuOutlined } from '@ant-design/icons';
+import { Layout, Alert } from 'antd';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import DashboardHome from './DashboardHome';
@@ -81,31 +80,13 @@ function Dashboard({ user }) {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <SideMenu collapsed={collapsed} role={role} />
+      <SideMenu 
+        collapsed={collapsed} 
+        role={role} 
+        setCollapsed={setCollapsed}
+      />
       <Layout style={{ marginLeft: isMobile ? 0 : (collapsed ? 80 : 200), transition: 'all 0.2s' }}>
-        {isMobile && (
-          <Button
-            icon={<MenuOutlined />}
-            onClick={toggleSidebar}
-            style={{
-              position: 'fixed',
-              top: '16px',
-              left: '16px',
-              zIndex: 1001,
-              background: '#ff1e00',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '20px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-            }}
-          />
-        )}
+        {/* No mobile toggle button here anymore */}
         <Header 
           collapsed={collapsed} 
           toggleSidebar={toggleSidebar} 
@@ -126,7 +107,7 @@ function Dashboard({ user }) {
           padding: 24, 
           minHeight: 280, 
           background: '#fff',
-          marginTop: isMobile ? '64px' : '24px' // Add more top margin on mobile for the fixed hamburger button
+          marginTop: isMobile ? '64px' : '24px'
         }}>
           <Routes>
             {/* Default landing route */}

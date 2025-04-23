@@ -44,6 +44,9 @@ import {
   
 } from "@ant-design/icons";
 
+
+
+
 ModuleRegistry.registerModules([
   AllCommunityModule, ExcelExportModule,
   RowGroupingModule,
@@ -634,6 +637,18 @@ const Productdetail = () => {
             enableCellTextSelection={true}
             isExternalFilterPresent={isExternalFilterPresent}
             doesExternalFilterPass={doesExternalFilterPass}    
+            localeText={{
+              itemsPerPage: 'Size',  // This is the correct key
+              page: 'Page',
+              more: 'More',
+              to: 'to',
+              of: 'of',
+              next: 'Next',
+              last: 'Last',
+              first: 'First',
+              previous: 'Previous',
+              loadingOoo: 'Loading...',
+          }}
             onGridReady={params => {
               params.api.sizeColumnsToFit();
               // Set smaller row height for mobile
@@ -705,6 +720,9 @@ const Productdetail = () => {
 
       {/* Add CSS for responsive design */}
       <style jsx global>{`
+
+
+
         .ag-theme-alpine {
           --ag-font-size: ${screenSize === 'xs' ? '12px' : '14px'};
           --ag-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
@@ -720,6 +738,9 @@ const Productdetail = () => {
         } */
         
         @media (max-width: 576px) {
+
+
+
           .ag-theme-alpine .ag-cell {
             padding-left: 5px;
             padding-right: 5px;
@@ -737,6 +758,12 @@ const Productdetail = () => {
         
         /* Make the grid work better on mobile */
         @media (max-width: 768px) {
+          .ag-paging-page-size .ag-picker-field .ag-label{
+  display: none;
+}
+.ag-paging-row-summary-panel {
+  display: none;
+}
           .ag-header-cell-label {
             white-space: normal;
             overflow: visible;
@@ -755,6 +782,7 @@ const Productdetail = () => {
       `}</style>
     </div>
   );
+  
 };
 
 export default Productdetail;

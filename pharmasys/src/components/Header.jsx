@@ -1,10 +1,11 @@
 import { Layout, Button, Dropdown, Avatar, Space, Typography } from 'antd';
 import { MenuFoldOutlined, MenuUnfoldOutlined, BellOutlined, UserOutlined } from '@ant-design/icons';
 
+
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
 
-function Header({ collapsed, toggleSidebar, onLogout }) {
+function Header({ collapsed, toggleSidebar, onLogout, isMobile }) {
   const userMenuItems = [
     {
       key: 'profile',
@@ -52,12 +53,18 @@ function Header({ collapsed, toggleSidebar, onLogout }) {
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
       }}
     >
-      <Button
-        type="text"
-        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-        onClick={toggleSidebar}
-        style={{ fontSize: '18px', width: 64, height: 64 }}
-      />
+      {/* Only show toggle button when not on mobile */}
+      {!isMobile && (
+        <Button
+          type="text"
+          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          onClick={toggleSidebar}
+          style={{ fontSize: '18px', width: 64, height: 64 }}
+        />
+      )}
+      
+      {/* On mobile, we need an empty div to maintain the flex layout */}
+      {isMobile && <div style={{ width: 24 }}></div>}
 
       <Space size="large">
         <Dropdown

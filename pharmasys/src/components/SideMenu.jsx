@@ -19,7 +19,7 @@ import logo from "./../assets/images/logo.png";
 
 const { Sider } = Layout;
 
-function SideMenu({ collapsed, role }) {
+function SideMenu({ collapsed, setCollapsed, role }) {
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
@@ -97,51 +97,101 @@ function SideMenu({ collapsed, role }) {
     },
   ].filter(Boolean);
 
+  const toggleMenu = () => {
+    if (setCollapsed) {
+      setCollapsed(!collapsed);
+    }
+  };
+
   return (
-    <Sider
-      trigger={null}
-      collapsible
-      collapsed={collapsed}
-      collapsedWidth={isMobile ? 0 : 80}
-      width={200}
-      breakpoint="lg"
-      style={{
-        overflow: 'auto',
-        height: '100vh',
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        zIndex: 1000,
-        transition: 'all 0.2s',
-      }}
-    >
-      <div className="logo" style={{ 
-        padding: '16px', 
-        textAlign: 'center',
-        height: '64px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: collapsed ? 'center' : 'flex-start'
-      }}>
-        {collapsed ? (
-          <h3 style={{ color: 'white', margin: 0 }}>PS</h3>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src={logo} alt="Logo" style={{ height: '28px', marginRight: '8px' }} />
-            <h2 style={{ color: 'white', margin: 0 }}>PharmaSys</h2>
-          </div>
+    <>
+      {/* Hamburger menu icon only shows when in mobile view AND menu is collapsed */}
+      {isMobile && collapsed && (
+        <Button 
+          icon={<MenuOutlined />}
+          onClick={toggleMenu}
+          style={{
+            position: 'fixed',
+            top: '16px',
+            left: '16px',
+            zIndex: 1001,
+            background: '#ff1e00',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          }}
+        />
+      )}
+
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        collapsedWidth={isMobile ? 0 : 80}
+        width={200}
+        breakpoint="lg"
+        style={{
+          overflow: 'auto',
+          height: '100vh',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: 1000,
+          transition: 'all 0.2s',
+        }}
+      >
+        <div className="logo" style={{ 
+          padding: '16px', 
+          textAlign: 'center',
+          height: '64px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: collapsed ? 'center' : 'flex-start'
+        }}>
+          {collapsed ? (
+            <h3 style={{ color: 'white', margin: 0 }}>PS</h3>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <img src={logo} alt="Logo" style={{ height: '28px', marginRight: '8px' }} />
+              <h2 style={{ color: 'white', margin: 0 }}>PharmaSys</h2>
+            </div>
+          )}
+        </div>
+        
+        {/* Close button that shows only when menu is open in mobile view */}
+        {isMobile && !collapsed && (
+          <Button
+            type="text"
+            icon={<MenuOutlined />}
+            onClick={toggleMenu}
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '16px',
+              color: '#fff',
+              fontSize: '18px',
+              background: 'transparent'
+            }}
+          />
         )}
-      </div>
-      
-      <Menu
-        theme="dark"
-        mode="inline"
-        defaultSelectedKeys={[location.pathname]}
-        selectedKeys={[location.pathname]}
-        items={menuItems}
-      />
-    </Sider>
+        
+        <Menu
+          theme="dark"
+          mode="inline"
+          defaultSelectedKeys={[location.pathname]}
+          selectedKeys={[location.pathname]}
+          items={menuItems}
+        />
+      </Sider>
+    </>
   );
 }
 
