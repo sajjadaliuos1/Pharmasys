@@ -7,78 +7,42 @@ import "jspdf-autotable";
 import axios from "axios";
 import { ExcelExportModule } from "ag-grid-enterprise";
 import { ModuleRegistry } from 'ag-grid-community';
-import { 
-  RowGroupingModule, 
-  PivotModule, 
-  TreeDataModule,
-  ServerSideRowModelModule,
-  SetFilterModule
-} from 'ag-grid-enterprise';
+import GlobalModal from "../customhooks/GlobalModal";
+import { RowGroupingModule, PivotModule, TreeDataModule, ServerSideRowModelModule, SetFilterModule } from 'ag-grid-enterprise';
 import { DownloadOutlined, ReloadOutlined, TableOutlined, MenuOutlined } from "@ant-design/icons";
+import { AllCommunityModule } from "ag-grid-community";
 import {
-  AllCommunityModule,
- 
-} from "ag-grid-community";
-
-import {
-  Modal,
-  Form,
-  Input as AntInput,
-  Button,
-  
-  Tooltip,
-  Dropdown,
-  Menu,
-  message,
-  Spin,
-  
-  Space,
- 
-  Row,
-  Col,
+  Modal, Form, Input as AntInput, Button, Tooltip, Dropdown, Menu, message, Spin, Space, Row, Col,
 } from "antd";
 import {
-  ColumnHeightOutlined,
-  SearchOutlined,
-  PlusOutlined,
-  
+  ColumnHeightOutlined, SearchOutlined, PlusOutlined,
 } from "@ant-design/icons";
-
-
-
 
 ModuleRegistry.registerModules([
   AllCommunityModule, ExcelExportModule,
   RowGroupingModule,
-  PivotModule, 
+  PivotModule,
   TreeDataModule,
   ServerSideRowModelModule,
   SetFilterModule
 ]);
-ModuleRegistry.registerModules([
-  
-]);
-const rowSelection = {
-  mode: "multiRow",
-  headerCheckbox: true,
-};
 
 const ActionCellRenderer = (params) => {
   const handleEdit = () => {
-    console.log("Edit invoice:", params.data);
+    console.log("Edit category:", params.data);
     // Add your edit logic here
   };
 
   const handleDelete = () => {
-    console.log("Delete invoice:", params.data);
+    console.log("Delete category:", params.data);
     // Add your delete logic here
   };
 
   return (
     <div className="action-buttons">
-      <button 
-        onClick={handleEdit} 
-        className="edit-btn" 
+      <button
+        onClick={handleEdit}
+        className="edit-btn"
         title="Edit"
         style={{ background: "none", border: "none", cursor: "pointer", marginRight: "10px" }}
       >
@@ -88,9 +52,9 @@ const ActionCellRenderer = (params) => {
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
         </svg>
       </button>
-      <button 
-        onClick={handleDelete} 
-        className="delete-btn" 
+      <button
+        onClick={handleDelete}
+        className="delete-btn"
         title="Delete"
         style={{ background: "none", border: "none", cursor: "pointer" }}
       >
@@ -108,15 +72,15 @@ const ActionCellRenderer = (params) => {
 const Productdetail = () => {
   const gridRef = useRef(null);
   const [rowData, setRowData] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form] = Form.useForm();
   const [searchText, setSearchText] = useState("");
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filteredData, setFilteredData] = useState([]);
   const [screenSize, setScreenSize] = useState('large');
-  
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingRecord, setEditingRecord] = useState(null);
+
 
   // Add responsive handling
   useEffect(() => {
@@ -149,42 +113,39 @@ const Productdetail = () => {
     };
   }, []);
 
-  // Custom filter function that only filters by invoiceId and invoiceNo
+  // Custom filter function that filters by categoryId and category name
   const isExternalFilterPresent = useCallback(() => {
     return searchText.length > 0;
   }, [searchText]);
 
-  // Filter function that checks if either invoiceId or invoiceNo contains the search text
+  // Filter function that checks if either categoryId or category contains the search text
   const doesExternalFilterPass = useCallback(
     (node) => {
       if (searchText.length === 0) {
         return true;
       }
-
       const lowerSearchText = searchText.toLowerCase();
-      const invoiceId = node.data.invoiceId ? node.data.invoiceId.toString().toLowerCase() : "";
-      const invoiceNo = node.data.invoiceNo ? node.data.invoiceNo.toString().toLowerCase() : "";
-
-      // Return true if either field contains the search text (OR logic)
-      return invoiceId.includes(lowerSearchText) || invoiceNo.includes(lowerSearchText);
+      const categoryId = node.data.categoryId ? node.data.categoryId.toString().toLowerCase() : "";
+      const category = node.data.category ? node.data.category.toString().toLowerCase() : "";
+      return categoryId.includes(lowerSearchText) || category.includes(lowerSearchText);
     },
     [searchText]
   );
+
   const gridOptions = {
     suppressMenuHide: true,
-    
   };
+
   const fetchInvoiceData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('https://pos.idotsolution.com/api/Sale/getAllInvoice');
+      const response = await axios.get('https://pos.idotsolution.com/api/Setting/categories');
+      console.log('API Response:', response.data.data);
       const data = response.data.data;
       setRowData(data);
-      setFilteredData(data);      
-        
+      setFilteredData(data);
       messageApi.success('Data loaded successfully');
       setLoading(false);
-
     } catch (err) {
       setError(err.message);
       setLoading(false);
@@ -193,12 +154,10 @@ const Productdetail = () => {
     }
   };
 
-  // First effect - only for fetching data on initial load
   useEffect(() => {
     fetchInvoiceData();
-  }, []); // Empty dependency array means it only runs once on mount
+  }, []);
 
-  // Second effect - only for filtering data when search or rowData changes
   useEffect(() => {
     if (!searchText.trim()) {
       setFilteredData(rowData);
@@ -206,135 +165,46 @@ const Productdetail = () => {
     }
     
     const searchLower = searchText.toLowerCase();
-    const filtered = rowData.filter(row => 
-      (row.customerName && row.customerName.toLowerCase().includes(searchLower)) ||
-      (row.customerContact && row.customerContact.toLowerCase().includes(searchLower)) ||
-      (row.invoiceId && row.invoiceId.toString().toLowerCase().includes(searchLower)) ||
-      (row.invoiceNo && row.invoiceNo.toString().toLowerCase().includes(searchLower))
+    const filtered = rowData.filter(row =>
+      (row.categoryId && row.categoryId.toString().toLowerCase().includes(searchLower)) ||
+      (row.category && row.category.toLowerCase().includes(searchLower))
     );
-    
+
     setFilteredData(filtered);
+    
+    // Also apply filter to AG Grid if it's ready
+    if (gridRef.current && gridRef.current.api) {
+      gridRef.current.api.onFilterChanged();
+    }
   }, [searchText, rowData]);
 
   const handleRefreshData = () => {
     fetchInvoiceData();
   };
 
-  // Adjust column definitions for responsive display
   const getColumnDefs = () => {
     const baseColumns = [
       {
-        headerName: "Invoice ID",
-        field: "invoiceId",
-        sortable: true,
-        filter: true,
-        minWidth: 120,
-      },
-      {
-        headerName: "Invoice No",
-        field: "invoiceNo",
-        sortable: true,
-        filter: true,
-        minWidth: 140,
-      },
-      {
-        headerName: "Customer",
-        field: "customerName",
-        sortable: true,
-        filter: true,
-        flex: 1,
-        minWidth: 150,
-      },
-      {
-        headerName: "Contact",
-        field: "customerContact",
+        headerName: "Category ID",
+        field: "categoryId",
         sortable: true,
         filter: true,
         minWidth: 140,
         hide: screenSize === 'xs',
       },
       {
-        headerName: "Date",
-        field: "date",
+        headerName: "Category Name",
+        field: "category",
         sortable: true,
         filter: true,
-        minWidth: 120,
-        hide: screenSize === 'xs' || screenSize === 'sm',
-        valueFormatter: (params) => {
-          if (!params.value) return '';
-          return new Date(params.value).toLocaleDateString();
-        }
-      },
-      {
-        headerName: "Total",
-        field: "totalAmount",
-        sortable: true,
-        filter: "agNumberColumnFilter",
-        minWidth: 130,
-        valueFormatter: (params) => {
-          if (params.value === undefined || params.value === null) return '$0.00';
-          return params.value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-        }
-      },
-      {
-        headerName: "Net Amount",
-        field: "netAmount",
-        sortable: true,
-        filter: "agNumberColumnFilter",
-        minWidth: 130,
-        hide: screenSize === 'xs' || screenSize === 'sm' || screenSize === 'md',
-        valueFormatter: (params) => {
-          if (params.value === undefined || params.value === null) return '$0.00';
-          return params.value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-        }
-      },
-      {
-        headerName: "Paid",
-        field: "totalPaid",
-        sortable: true,
-        filter: "agNumberColumnFilter",
-        minWidth: 120,
-        hide: screenSize === 'xs' || screenSize === 'sm',
-        valueFormatter: (params) => {
-          if (params.value === undefined || params.value === null) return '$0.00';
-          return params.value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-        }
-      },
-      {
-        headerName: "Remaining",
-        field: "remainingAmount",
-        sortable: true,
-        filter: "agNumberColumnFilter",
-        minWidth: 130,
-        hide: screenSize === 'xs' || screenSize === 'sm' || screenSize === 'md',
-        valueFormatter: (params) => {
-          if (params.value === undefined || params.value === null) return '$0.00';
-          return params.value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-        }
-      },
-      {
-        headerName: "Status",
-        field: "status",
-        sortable: true,
-        filter: true,
-        minWidth: 100,
-        cellStyle: params => {
-          if (params.value === 'Paid') {
-            return { color: 'green', fontWeight: 'bold' };
-          } else if (params.value === 'Unpaid') {
-            return { color: 'red', fontWeight: 'bold' };
-          } else if (params.value === 'Partial') {
-            return { color: 'orange', fontWeight: 'bold' };
-          }
-          return null;
-        }
+        minWidth: 140,
       },
       {
         headerName: "Actions",
         field: "actions",
         sortable: false,
         filter: false,
-        minWidth: 110, 
+        minWidth: 110,
         cellRenderer: ActionCellRenderer,
         suppressSizeToFit: true,
       }
@@ -342,11 +212,11 @@ const Productdetail = () => {
 
     return baseColumns;
   };
-
+  
   const columnDefs = useMemo(() => getColumnDefs(), [screenSize]);
-
+  
   const handleExportPDF = () => {
-    const fileName = prompt("Enter file name for PDF:", "invoice-data");
+    const fileName = prompt("Enter file name for PDF:", "category-data");
     if (!fileName) return;
 
     // Create a new jsPDF instance
@@ -354,7 +224,7 @@ const Productdetail = () => {
 
     // Add title
     doc.setFontSize(18);
-    doc.text('Invoice Report', 14, 22);
+    doc.text('Category Report', 14, 22);
     doc.setFontSize(11);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
 
@@ -363,15 +233,6 @@ const Productdetail = () => {
     const columns = visibleCols.map((col) => col.headerName || col.field);
     const rows = rowData.map((row) =>
       visibleCols.map((col) => {
-        // Format values (similar to value formatters in grid)
-        if (col.field === 'date' && row[col.field]) {
-          return new Date(row[col.field]).toLocaleDateString();
-        }
-        if (['totalAmount', 'netAmount', 'totalPaid', 'remainingAmount'].includes(col.field)) {
-          const value = row[col.field];
-          if (value === undefined || value === null) return '$0.00';
-          return '$' + value.toFixed(2);
-        }
         return row[col.field] || "";
       })
     );
@@ -392,8 +253,8 @@ const Productdetail = () => {
   const handleExportExcel = () => {
     if (gridRef.current && gridRef.current.api) {
       const params = {
-        fileName: 'invoice-data.xlsx',
-        sheetName: 'Invoices'
+        fileName: 'category-data.xlsx',
+        sheetName: 'Categories'
       };
       gridRef.current.api.exportDataAsExcel(params);
     }
@@ -442,12 +303,23 @@ const Productdetail = () => {
       handleFullscreen();
     }
   };
-
-  const handleAddInvoice = () => {
-    // Using _ as parameter name indicates it's intentionally unused
-    messageApi.info('This is a demo. In a real app, this would add a new invoice.');
-    setIsModalOpen(false);
-    form.resetFields();
+  
+  const AddnewModal = (record) => {
+    let initialValues;
+    
+    if (record) {
+      // For editing an existing record, use the data from the record
+      initialValues = { ...record };
+    } else {
+      // For adding a new record, use default empty values
+      initialValues = { 
+        categoryId: '', 
+        category: '', 
+      };
+    }
+    
+    setEditingRecord(initialValues);
+    setIsModalVisible(true);
   };
 
   const mobileMenu = (
@@ -474,9 +346,18 @@ const Productdetail = () => {
       </Menu.SubMenu>
     </Menu>
   );
-
+  
+  const modalFields = [
+    { 
+      name: 'category', 
+      label: 'Category Name', 
+      type: 'input',
+      rules: [{ required: true, message: 'Category name is required' }] 
+    },
+  ];
+  
   return (
-    <div className="invoice-management-container" style={{ padding: '10px', maxWidth: '100%' }}>
+    <div className="category-management-container" style={{ padding: '10px', maxWidth: '100%' }}>
       {contextHolder}
 
       {/* Responsive Header Section - Restructured for Mobile */}
@@ -485,7 +366,7 @@ const Productdetail = () => {
         <Row gutter={[16, 16]} style={{ marginBottom: '12px' }}>
           <Col span={24}>
             <h2 style={{ margin: 0, fontSize: screenSize === 'xs' ? '18px' : '24px', textAlign: 'center' }}>
-              Invoice Management
+              Category Management
             </h2>
           </Col>
         </Row>
@@ -494,7 +375,7 @@ const Productdetail = () => {
         <Row gutter={[16, 16]} style={{ marginBottom: '12px' }}>
           <Col span={18}>
             <AntInput
-              placeholder="Search invoices..."
+              placeholder="Search by ID or name..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               style={{ width: '100%' }}
@@ -515,7 +396,7 @@ const Productdetail = () => {
           <Col xs={3}>
             <Button 
               type="primary" 
-              onClick={() => setIsModalOpen(true)} 
+              onClick={() => AddnewModal(null)} 
               icon={<PlusOutlined />}
             >
              
@@ -528,12 +409,12 @@ const Productdetail = () => {
       <div className="desktop-header" style={{ display: screenSize === 'xs' || screenSize === 'sm' ? 'none' : 'block', marginBottom: '15px' }}>
         <Row gutter={[16, 16]} align="middle" justify="space-between">
           <Col md={6} lg={6}>
-            <h2 style={{ margin: 0 }}>Invoice Management</h2>
+            <h2 style={{ margin: 0 }}>Category Management</h2>
           </Col>
           
           <Col md={10} lg={10} style={{ textAlign: 'center' }}>
             <AntInput
-              placeholder="Search invoices123..."
+              placeholder="Search by category ID or name..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               style={{ width: '100%', maxWidth: '350px' }}
@@ -543,8 +424,9 @@ const Productdetail = () => {
           </Col>
           
           <Col md={8} lg={8} style={{ textAlign: 'right' }}>
-            <Space wrap>
-              <Button 
+           <div className="row">
+           <Space wrap>
+            <div className="col-6">   <Button 
                 icon={<ReloadOutlined />} 
                 onClick={handleRefreshData}
                 title="Refresh Data"
@@ -588,18 +470,36 @@ const Productdetail = () => {
                   <Button icon={<ColumnHeightOutlined />} />
                 </Tooltip>
               </Dropdown>
+              </div>
+            <div className="col-6">  
+           
+           <Button
+             type="primary"
+             icon={<PlusOutlined />}
+             onClick={() => AddnewModal(null)}
+           >
+             Add New Category
+           </Button></div>
 
-              <Button type="primary" onClick={() => setIsModalOpen(true)} icon={<PlusOutlined />}>
-                New Invoice
-              </Button>
+        
+              
+              <GlobalModal
+                visible={isModalVisible}
+                title={editingRecord && editingRecord.categoryId ? 'Edit Category' : 'Add New Category'}
+                onCancel={() => setIsModalVisible(false)}
+                initialValues={editingRecord}
+                fields={modalFields}
+                width={800} // Make the modal wider to accommodate more fields
+              />
             </Space>
+            </div>
           </Col>
         </Row>
       </div>
 
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '50px 0' }}>
-          <Spin size="large" tip="Loading invoice data..." />
+          <Spin size="large" tip="Loading category data..." />
         </div>
       ) : error ? (
         <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
@@ -619,14 +519,11 @@ const Productdetail = () => {
           }}
         >
           <AgGridReact
-       
-          gridOptions={gridOptions}
-          columnDefs={columnDefs}
+            gridOptions={gridOptions}
+            columnDefs={columnDefs}
             ref={gridRef}
             rowData={filteredData}
-          
             defaultColDef={defaultColDef}
-            rowSelection={rowSelection}
             pagination={true}
             popupParent={popupParent}
             paginationPageSize={screenSize === 'xs' ? 5 : 10}
@@ -638,7 +535,7 @@ const Productdetail = () => {
             isExternalFilterPresent={isExternalFilterPresent}
             doesExternalFilterPass={doesExternalFilterPass}    
             localeText={{
-              itemsPerPage: 'Size',  // This is the correct key
+              itemsPerPage: 'Size',
               page: 'Page',
               more: 'More',
               to: 'to',
@@ -648,7 +545,7 @@ const Productdetail = () => {
               first: 'First',
               previous: 'Previous',
               loadingOoo: 'Loading...',
-          }}
+            }}
             onGridReady={params => {
               params.api.sizeColumnsToFit();
               // Set smaller row height for mobile
@@ -659,70 +556,13 @@ const Productdetail = () => {
             onFirstDataRendered={params => {
               params.api.sizeColumnsToFit();
             }}
-            overlayNoRowsTemplate="<span style='padding: 20px; display: inline-block;'>No invoices found matching your search criteria</span>"
+            overlayNoRowsTemplate="<span style='padding: 20px; display: inline-block;'>No categories found matching your search criteria</span>"
           />
         </div>
       )}
-
-      {/* Modal and Form */}
-      <Modal
-        title="Create New Invoice"
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        footer={null}
-        width={screenSize === 'xs' ? '95%' : '520px'}
-      >
-        <Button type="primary" onClick={() => setIsModalOpen(true)} icon={<PlusOutlined />}>
-                New category
-              </Button>
-        <Form form={form} layout="vertical" onFinish={handleAddInvoice}>
-          <Form.Item
-            label="Customer Name"
-            name="customerName"
-            rules={[{ required: true, message: 'Please enter customer name' }]}
-          >
-            <AntInput />
-          </Form.Item>
-          <Form.Item
-            label="Contact Number"
-            name="contact"
-            rules={[{ required: true, message: 'Please enter contact number' }]}
-          >
-            <AntInput />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item 
-                label="Total Amount" 
-                name="totalAmount" 
-                rules={[{ required: true, message: 'Please enter total amount' }]}
-              >
-                <AntInput type="number" prefix="$" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item 
-                label="Payment Received" 
-                name="paid" 
-                rules={[{ required: true, message: 'Please enter payment received' }]}
-              >
-                <AntInput type="number" prefix="$" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              Create Invoice
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
-
+      
       {/* Add CSS for responsive design */}
       <style jsx global>{`
-
-
-
         .ag-theme-alpine {
           --ag-font-size: ${screenSize === 'xs' ? '12px' : '14px'};
           --ag-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
@@ -732,15 +572,7 @@ const Productdetail = () => {
           font-weight: bold;
         }
         
-        /* .ag-theme-alpine .ag-cell {
-          padding-left: 8px;
-          padding-right: 8px;
-        } */
-        
         @media (max-width: 576px) {
-
-
-
           .ag-theme-alpine .ag-cell {
             padding-left: 5px;
             padding-right: 5px;
@@ -758,12 +590,12 @@ const Productdetail = () => {
         
         /* Make the grid work better on mobile */
         @media (max-width: 768px) {
-          .ag-paging-page-size .ag-picker-field .ag-label{
-  display: none;
-}
-.ag-paging-row-summary-panel {
-  display: none;
-}
+          .ag-paging-page-size .ag-picker-field .ag-label {
+            display: none;
+          }
+          .ag-paging-row-summary-panel {
+            display: none;
+          }
           .ag-header-cell-label {
             white-space: normal;
             overflow: visible;
@@ -782,7 +614,6 @@ const Productdetail = () => {
       `}</style>
     </div>
   );
-  
 };
 
 export default Productdetail;
