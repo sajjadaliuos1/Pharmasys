@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
-import Dashboard from './components/Dashboard';
+import Dashboard from './components/common/Dashboard';
 
 function App() {
   const [user, setUser] = useState(null);

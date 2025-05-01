@@ -3,18 +3,20 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Layout, Alert } from 'antd';
 import SideMenu from './SideMenu';
 import Header from './Header';
-import DashboardHome from './DashboardHome';
-import Productdetail from './product/Productdetail';
-import SalesDashboard from './SalesDashboard';
-import CustomerDetails from './CustomerDetails';
-import CustomerDashboard from './CustomerDashboard';
-
+import DashboardHome from '../DashboardHome';
+import Categorydetail from '../category/Categorydetail';
+import SalesDashboard from '../SalesDashboard';
+import CustomerDetails from '../CustomerDetails';
+import CustomerDashboard from '../CustomerDashboard';
+import ProductDetails from '../product/ProductDetails';
+import SubCategoryDetail from '../category/SubCategoryDetails';
 const { Content } = Layout;
 
 // Placeholder components
 const Inventory = () => (
   <Routes>
-    <Route path="list" element={<Productdetail />} />
+    <Route path="list" element={<Categorydetail />} />
+    
     <Route path="add" element={<div>Add Medicine</div>} />
     <Route path="stock" element={<div>Stock Management</div>} />
     <Route path="suppliers" element={<div>Suppliers</div>} />
@@ -119,7 +121,9 @@ function Dashboard({ user }) {
               <>
                 <Route path="/sales" element={<Sales />} />
                 <Route path="/customers" element={<CustomerDetails />} />
-                <Route path="/products" element={<Productdetail />} />
+                <Route path="/products" element={<ProductDetails />} />
+                <Route path="/category" element={<Categorydetail />} />
+                <Route path="/subcategory" element={<SubCategoryDetail />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/settings" element={<Settings />} />
               </>

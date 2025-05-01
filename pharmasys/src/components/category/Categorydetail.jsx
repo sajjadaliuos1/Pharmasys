@@ -1,13 +1,14 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { AgGridReact } from "ag-grid-react";
-import "./style.css";
+import "../common/style.css";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import axios from "axios";
 import { ExcelExportModule } from "ag-grid-enterprise";
 import { ModuleRegistry } from 'ag-grid-community';
 import GlobalModal from "../customhooks/GlobalModal";
+import CustomSelect from "../customhooks/CustomSelect";
 import { RowGroupingModule, PivotModule, TreeDataModule, ServerSideRowModelModule, SetFilterModule } from 'ag-grid-enterprise';
 import { DownloadOutlined, ReloadOutlined, TableOutlined, MenuOutlined } from "@ant-design/icons";
 import { AllCommunityModule } from "ag-grid-community";
@@ -69,7 +70,7 @@ const ActionCellRenderer = (params) => {
   );
 };
 
-const Productdetail = () => {
+const Categorydetail = () => {
   const gridRef = useRef(null);
   const [rowData, setRowData] = useState([]);
   const [searchText, setSearchText] = useState("");
@@ -348,13 +349,38 @@ const Productdetail = () => {
   );
   
   const modalFields = [
-    { 
-      name: 'category', 
-      label: 'Category Name', 
+    {
+      name: 'category',
+      label: 'Category Name',
       type: 'input',
-      rules: [{ required: true, message: 'Category name is required' }] 
+      rules: [{ required: true, message: 'Category name is required' }],
     },
+    {
+      name: 'customSelectCategory',
+      label: 'Project Selection',
+      // Use component instead of render for custom components
+      component: <CustomSelect />,
+    },
+    {
+      name: 'product',
+      label: 'Select Product',
+      type: 'select',
+      options: [
+        { label: 'Apple', value: 'apple', description: 'Fresh red apple.' },
+        { label: 'Banana', value: 'banana', description: 'Sweet yellow banana.' },
+        { label: 'Orange', value: 'orange', description: 'Juicy orange fruit.' },
+      ],
+      onChange: (value, form, setExtraDetails) => {
+        const descriptions = {
+          apple: 'Fresh red apple.',
+          banana: 'Sweet yellow banana.',
+          orange: 'Juicy orange fruit.'
+        };
+        setExtraDetails(descriptions[value] || '');
+      }
+    }
   ];
+  
   
   return (
     <div className="category-management-container" style={{ padding: '10px', maxWidth: '100%' }}>
@@ -489,8 +515,9 @@ const Productdetail = () => {
                 onCancel={() => setIsModalVisible(false)}
                 initialValues={editingRecord}
                 fields={modalFields}
-                width={800} // Make the modal wider to accommodate more fields
-              />
+                width={800} 
+   
+/>
             </Space>
             </div>
           </Col>
@@ -560,63 +587,12 @@ const Productdetail = () => {
           />
         </div>
       )}
-      
-      {/* Add CSS for responsive design */}
-      <style jsx global>{`
-        .ag-theme-alpine {
-          --ag-font-size: ${screenSize === 'xs' ? '12px' : '14px'};
-          --ag-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-        }
-        
-        .ag-theme-alpine .ag-header {
-          font-weight: bold;
-        }
-        
-        @media (max-width: 576px) {
-          .ag-theme-alpine .ag-cell {
-            padding-left: 5px;
-            padding-right: 5px;
-          }
-          
-          .ag-theme-alpine .ag-header-cell-label {
-            font-size: 12px;
-          }
-          
-          /* Mobile-specific styles */
-          .mobile-header h2 {
-            text-align: center;
-          }
-        }
-        
-        /* Make the grid work better on mobile */
-        @media (max-width: 768px) {
-          .ag-paging-page-size .ag-picker-field .ag-label {
-            display: none;
-          }
-          .ag-paging-row-summary-panel {
-            display: none;
-          }
-          .ag-header-cell-label {
-            white-space: normal;
-            overflow: visible;
-          }
-          
-          .desktop-header {
-            display: none;
-          }
-        }
-        
-        @media (min-width: 769px) {
-          .mobile-header {
-            display: none;
-          }
-        }
-      `}</style>
+     
     </div>
   );
 };
 
-export default Productdetail;
+export default Categorydetail;
 
 const root = createRoot(document.getElementById("root"));
-root.render(<Productdetail />);
+root.render(<Categorydetail />);

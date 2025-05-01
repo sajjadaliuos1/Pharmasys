@@ -15,7 +15,7 @@ import {
   ContactsOutlined,
   MenuOutlined
 } from '@ant-design/icons';
-import logo from "./../assets/images/logo.png";
+import logo from "../../assets/images/logo.png";
 
 const { Sider } = Layout;
 
@@ -35,7 +35,7 @@ function SideMenu({ collapsed, setCollapsed, role }) {
   }, []);
   
   const roleMenuVisibility = {
-    role1: ['dashboard', 'setup', 'supplier', 'products', 'customers', 'sales'],
+    role1: ['dashboard', 'setup', 'supplier', 'products', 'category', 'customers', 'sales'],
     role2: ['sales', 'customers'],
     role3: ['customers', 'setup']
   };
@@ -75,15 +75,34 @@ function SideMenu({ collapsed, setCollapsed, role }) {
         }
       ]
     },
-    allowedMenus.includes('supplier') && {
-      key: '/dashboard/suppliers',
-      icon: <ContactsOutlined />,
-      label: <Link to="/dashboard/suppliers">Supplier</Link>,
+    
+    allowedMenus.includes('category') && {
+      key: '/dashboard/category',
+      icon: <MedicineBoxOutlined />,
+      label: 'Category',
+      children: [
+        {
+          key: '/dashboard/category/',
+          icon: <AppstoreOutlined/>,
+          label: <Link to="/dashboard/category">Category</Link>,
+        },
+        {
+          key: '/dashboard/subcategory',
+          icon: <AppstoreOutlined />,
+          label: <Link to="/dashboard/subcategory">subcategory</Link>,
+        },
+      
+      ]
     },
     allowedMenus.includes('products') && {
       key: '/dashboard/products',
       icon: <MedicineBoxOutlined />,
-      label: <Link to="/dashboard/products">Products</Link>,
+      label: <Link to="/dashboard/products">Product</Link>,
+    },
+    allowedMenus.includes('supplier') && {
+      key: '/dashboard/suppliers',
+      icon: <ContactsOutlined />,
+      label: <Link to="/dashboard/suppliers">Supplier</Link>,
     },
     allowedMenus.includes('customers') && {
       key: '/dashboard/customers',
