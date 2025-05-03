@@ -6,14 +6,25 @@ import {
   MedicineBoxOutlined,
   ShoppingCartOutlined,
   TeamOutlined,
-  BarChartOutlined,
   SettingOutlined,
   UserSwitchOutlined,
   AppstoreOutlined,
   ShopOutlined,
   UserOutlined,
   ContactsOutlined,
-  MenuOutlined
+  MenuOutlined,
+  ShoppingOutlined,
+  ReconciliationOutlined,
+  RollbackOutlined,
+  FileTextOutlined,
+  BarChartOutlined,
+  DollarCircleOutlined,
+  TransactionOutlined,
+  GoldOutlined,
+  PieChartOutlined,
+  LineChartOutlined,
+  CreditCardOutlined,
+  BankOutlined
 } from '@ant-design/icons';
 import logo from "../../assets/images/logo.png";
 
@@ -35,9 +46,9 @@ function SideMenu({ collapsed, setCollapsed, role }) {
   }, []);
   
   const roleMenuVisibility = {
-    role1: ['dashboard', 'setup', 'supplier', 'products', 'category', 'customers', 'sales'],
-    role2: ['sales', 'customers'],
-    role3: ['customers', 'setup']
+    role1: ['dashboard', 'setup', 'supplier', 'products', 'category', 'customers', 'sales', 'purchase', 'transactions'],
+    role2: ['dashboard', 'sales', 'customers', 'purchase', 'transactions'],
+    role3: ['dashboard', 'customers', 'setup', 'sales']
   };
   
   const allowedMenus = roleMenuVisibility[role] || [];
@@ -49,7 +60,7 @@ function SideMenu({ collapsed, setCollapsed, role }) {
       label: <Link to="/dashboard">Dashboard</Link>,
     },
     allowedMenus.includes('setup') && {
-      key: '/dashboard/settings',
+      key: 'settings',
       icon: <SettingOutlined />,
       label: 'Setup',
       children: [
@@ -77,42 +88,153 @@ function SideMenu({ collapsed, setCollapsed, role }) {
     },
     
     allowedMenus.includes('category') && {
-      key: '/dashboard/category',
-      icon: <MedicineBoxOutlined />,
-      label: 'Category',
+      key: 'category',
+      icon: <AppstoreOutlined />,
+      label: 'Categories',
       children: [
         {
-          key: '/dashboard/category/',
-          icon: <AppstoreOutlined/>,
+          key: '/dashboard/category',
+          icon: <AppstoreOutlined />,
           label: <Link to="/dashboard/category">Category</Link>,
         },
         {
           key: '/dashboard/subcategory',
           icon: <AppstoreOutlined />,
-          label: <Link to="/dashboard/subcategory">subcategory</Link>,
+          label: <Link to="/dashboard/subcategory">Subcategory</Link>,
         },
-      
       ]
     },
     allowedMenus.includes('products') && {
-      key: '/dashboard/products',
+      key: 'products',
       icon: <MedicineBoxOutlined />,
-      label: <Link to="/dashboard/products">Product</Link>,
+      label: 'Products',
+      children: [
+        {
+          key: '/dashboard/products',
+          icon: <MedicineBoxOutlined />,
+          label: <Link to="/dashboard/products">Product</Link>,
+        },
+        {
+          key: '/dashboard/productstock',
+          icon: <ReconciliationOutlined />,
+          label: <Link to="/dashboard/productstock">Product Stock</Link>,
+        },
+        {
+          key: '/dashboard/productlowstock',
+          icon: <BarChartOutlined />,
+          label: <Link to="/dashboard/productlowstock">Product Low Stock</Link>,
+        },
+        {
+          key: '/dashboard/productrate',
+          icon: <DollarCircleOutlined />,
+          label: <Link to="/dashboard/productrate">Product Rate</Link>,
+        },
+      ]
+    },
+    allowedMenus.includes('purchase') && {
+      key: 'purchase',
+      icon: <ShoppingOutlined />,
+      label: 'Purchase',
+      children: [
+        {
+          key: '/dashboard/purchase',
+          icon: <ShoppingOutlined />,
+          label: <Link to="/dashboard/purchase">Purchase</Link>,
+        },
+        {
+          key: '/dashboard/purchaserecord',
+          icon: <FileTextOutlined />,
+          label: <Link to="/dashboard/purchaserecord">Purchase Record</Link>,
+        },
+        {
+          key: '/dashboard/purchasereturn',
+          icon: <RollbackOutlined />,
+          label: <Link to="/dashboard/purchasereturn">Return</Link>,
+        },
+        {
+          key: '/dashboard/purchasereturnrecord',
+          icon: <ReconciliationOutlined />,
+          label: <Link to="/dashboard/purchasereturnrecord">Return Record</Link>,
+        },
+      ]
     },
     allowedMenus.includes('supplier') && {
-      key: '/dashboard/suppliers',
+      key: 'supplier',
       icon: <ContactsOutlined />,
-      label: <Link to="/dashboard/suppliers">Supplier</Link>,
+      label: "Supplier",
+      children: [
+        {
+          key: '/dashboard/supplier',
+          icon: <ContactsOutlined />,
+          label: <Link to="/dashboard/supplier">Suppliers</Link>,
+        },
+        {
+          key: '/dashboard/supplierpayment',
+          icon: <CreditCardOutlined />,
+          label: <Link to="/dashboard/supplierpayment">Supplier Payment</Link>,
+        },
+      ]
     },
     allowedMenus.includes('customers') && {
-      key: '/dashboard/customers',
+      key: 'customers',
       icon: <TeamOutlined />,
-      label: <Link to="/dashboard/customers">Customer</Link>,
+      label: 'Customers',
+      children: [
+        {
+          key: '/dashboard/customers',
+          icon: <TeamOutlined />,
+          label: <Link to="/dashboard/customers">Customers</Link>,
+        },
+        {
+          key: '/dashboard/customerpayment',
+          icon: <CreditCardOutlined />,
+          label: <Link to="/dashboard/customerpayment">Customer Payment</Link>,
+        },
+      ]
     },
     allowedMenus.includes('sales') && {
-      key: '/dashboard/sales',
+      key: 'sales',
       icon: <ShoppingCartOutlined />,
-      label: <Link to="/dashboard/sales">Sale</Link>,
+      label: 'Sales',
+      children: [
+        {
+          key: '/dashboard/sales',
+          icon: <ShoppingCartOutlined />,
+          label: <Link to="/dashboard/sales">Sale</Link>,
+        },
+        {
+          key: '/dashboard/salesrecord',
+          icon: <FileTextOutlined />,
+          label: <Link to="/dashboard/salesrecord">Sale Record</Link>,
+        },
+        {
+          key: '/dashboard/salesreturn',
+          icon: <RollbackOutlined />,
+          label: <Link to="/dashboard/salesreturn">Return</Link>,
+        },
+      ]
+    },
+    allowedMenus.includes('transactions') && {
+      key: 'transactions',
+      icon: <TransactionOutlined />,
+      label: 'Transactions',
+      children: [
+        {
+          key: '/dashboard/dailysales',
+          icon: <LineChartOutlined />,
+          label: <Link to="/dashboard/dailysales">Daily Sales</Link>,
+        },
+        {
+          key: '/dashboard/dailyprofit',
+          icon: <GoldOutlined />,
+          label: <Link to="/dashboard/dailyprofit">Daily Profit</Link>,
+        },
+        {
+          key: '/dashboard/profitsummary',
+          icon: <PieChartOutlined />,
+          label: <Link to="/dashboard/profitsummary">Profit Summary</Link>,
+        },
+      ]
     },
   ].filter(Boolean);
 

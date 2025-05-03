@@ -1,11 +1,10 @@
 import { Layout, Button, Dropdown, Avatar, Space, Typography } from 'antd';
 import { MenuFoldOutlined, MenuUnfoldOutlined, BellOutlined, UserOutlined } from '@ant-design/icons';
 
-
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
 
-function Header({ collapsed, toggleSidebar, onLogout, isMobile }) {
+function Header({ collapsed, toggleSidebar, onLogout, isMobile, user }) {
   const userMenuItems = [
     {
       key: 'profile',
@@ -18,6 +17,7 @@ function Header({ collapsed, toggleSidebar, onLogout, isMobile }) {
     {
       key: 'logout',
       label: 'Logout',
+      danger: true, // Makes the text red to indicate a destructive action
     },
   ];
 
@@ -42,6 +42,18 @@ function Header({ collapsed, toggleSidebar, onLogout, isMobile }) {
     }
   };
 
+  // Get user display name based on role
+  const getUserDisplayName = () => {
+    if (!user) return 'User';
+    
+    switch (user.role) {
+      case 'role1': return 'Admin';
+      case 'role2': return 'Manager';
+      case 'role3': return 'Staff';
+      default: return user.name || 'User';
+    }
+  };
+
   return (
     <AntHeader
       style={{
@@ -51,6 +63,9 @@ function Header({ collapsed, toggleSidebar, onLogout, isMobile }) {
         alignItems: 'center',
         justifyContent: 'space-between',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        position: isMobile ? 'fixed' : 'relative',
+        width: '100%',
+        zIndex: 998,
       }}
     >
       {/* Only show toggle button when not on mobile */}
@@ -86,9 +101,11 @@ function Header({ collapsed, toggleSidebar, onLogout, isMobile }) {
           arrow
           trigger={['click']}
         >
-          <Space align="center">
+          <Space align="center" style={{ cursor: 'pointer' }}>
             <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#87d068' }} />
-            <Text style={{ display: 'inline', fontWeight: '500', color: '#333' }}>Admin</Text>
+            <Text style={{ display: 'inline', fontWeight: '500', color: '#333' }}>
+              {getUserDisplayName()}
+            </Text>
           </Space>
         </Dropdown>
       </Space>

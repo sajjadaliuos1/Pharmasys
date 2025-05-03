@@ -86,7 +86,13 @@ const ProductModal = ({ visible, onCancel, onSubmit, categories = [], subcategor
         >
           <Input placeholder="Enter product locations" />
         </Form.Item>
-
+        <Form.Item
+          name="barcode"
+          label="barcode"
+          rules={[{ required: true, message: 'Please enter barcode' }]}
+        >
+          <Input placeholder="Enter Bar code" />
+        </Form.Item>
         <Form.Item name="saleInStrips" valuePropName="checked">
           <Checkbox onChange={handleCheckboxChange}>Sale in Strips?</Checkbox>
         </Form.Item>
