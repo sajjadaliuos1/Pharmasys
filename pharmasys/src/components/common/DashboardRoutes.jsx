@@ -7,6 +7,7 @@ import ProductDetails from '../product/ProductDetails';
 import Categorydetail from '../category/Categorydetail';
 import SubCategoryDetail from '../category/SubCategoryDetails';
 import SupplierDetails from '../supplier/SupplierDetails';
+import Purchase from '../purchase/purchase'; 
 
 function DashboardRoutes({ role }) {
   // Early return with redirect if no valid role
@@ -46,7 +47,7 @@ function DashboardRoutes({ role }) {
       {/* Purchase routes - for role1 and role2 only */}
       {checkAccess(['role1', 'role2']) && (
         <>
-          <Route path="/purchase" element={<DashboardHome />} />
+          <Route path="/purchase" element={<Purchase />} />
           <Route path="/purchaserecord" element={<DashboardHome />} />
           <Route path="/purchasereturn" element={<DashboardHome />} />
           <Route path="/purchasereturnrecord" element={<DashboardHome />} />
