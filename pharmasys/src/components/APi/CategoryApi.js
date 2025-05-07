@@ -1,7 +1,9 @@
+import { BASE_URL  } from './Helper.js';
 import axios from "axios";
+
 ///////get categories from api///////
 export const CategoriesDetails  = async () => {
-    const response = await axios.get('https://pos.idotsolution.com/api/Setting/categories');
+    const response =  await axios.get(`${BASE_URL}/Setting/categories`);
     return response;
   };
   

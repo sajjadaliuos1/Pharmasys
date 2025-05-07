@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout, Alert } from 'antd';
+import { Layout, Alert, Spin } from 'antd';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import DashboardRoutes from './DashboardRoutes';
@@ -11,8 +11,9 @@ function Dashboard({ user, onLogout }) {
   const [collapsed, setCollapsed] = useState(false);
   const [showAlert, setShowAlert] = useState(true); // for success message
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [initialLoading, setInitialLoading] = useState(true);
   const navigate = useNavigate();
-
+  
   // Check for user authentication
   useEffect(() => {
     if (!user) {
@@ -20,7 +21,7 @@ function Dashboard({ user, onLogout }) {
       navigate('/login');
     }
   }, [user, navigate]);
-
+  
   // Handle window resize for responsive layout
   useEffect(() => {
     const handleResize = () => {
@@ -36,7 +37,7 @@ function Dashboard({ user, onLogout }) {
     
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
+  
   // Auto-close success alert after 3 seconds
   useEffect(() => {
     if (user) {
@@ -47,19 +48,35 @@ function Dashboard({ user, onLogout }) {
       return () => clearTimeout(timer);
     }
   }, [user]);
-
+  
+  // Simulate dashboard data loading
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        // Simulate API data loading
+        await new Promise(resolve => setTimeout(resolve, 800));
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+    
+    loadDashboardData();
+  }, []);
+  
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
   };
-
+  
   const handleLogout = () => {
     onLogout(); // Call the logout handler from App component
     navigate('/login');
   };
-
+  
   // Safely access role with fallback
   const role = user?.role || '';
-
+  
   const getLoginMessage = () => {
     switch (role) {
       case 'role1': return 'Admin login successful';
@@ -68,48 +85,58 @@ function Dashboard({ user, onLogout }) {
       default: return 'Login successful';
     }
   };
-
+  
   // If no user, show loading or redirect
   if (!user) {
     return <div>Checking authentication...</div>;
   }
-
+  
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <SideMenu 
-        collapsed={collapsed} 
-        role={role} 
+        collapsed={collapsed}
+        role={role}
         setCollapsed={setCollapsed}
       />
-      <Layout style={{ 
-        marginLeft: isMobile ? 0 : (collapsed ? 80 : 200), 
-        transition: 'all 0.2s' 
+      <Layout style={{
+        marginLeft: isMobile ? 0 : (collapsed ? 80 : 200),
+        transition: 'all 0.2s'
       }}>
-        <Header 
-          collapsed={collapsed} 
-          toggleSidebar={toggleSidebar} 
+        <Header
+          collapsed={collapsed}
+          toggleSidebar={toggleSidebar}
           onLogout={handleLogout}
           isMobile={isMobile}
           user={user}
         />
         {showAlert && (
-          <Alert 
-            message={getLoginMessage()} 
-            type="success" 
-            showIcon 
-            closable 
+          <Alert
+            message={getLoginMessage()}
+            type="success"
+            showIcon
+            closable
             style={{ marginBottom: 16 }}
           />
         )}
-        <Content style={{ 
-          margin: '24px 16px', 
-          padding: 24, 
-          minHeight: 280, 
+        <Content style={{
+          margin: '24px 16px',
+          padding: 24,
+          minHeight: 280,
           background: '#fff',
           marginTop: isMobile ? '64px' : '24px'
         }}>
-          {/* Use the dedicated routes component */}
-          <DashboardRoutes role={role} />
+          {initialLoading ? (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              height: '50vh'
+            }}>
+              <Spin size="large" tip="Loading dashboard data..." />
+            </div>
+          ) : (
+            <DashboardRoutes role={role} />
+          )}
         </Content>
       </Layout>
       

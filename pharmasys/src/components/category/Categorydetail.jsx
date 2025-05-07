@@ -9,11 +9,12 @@ import GlobalModal from "../customhooks/GlobalModal";
 import CustomSelect from "../customhooks/CustomSelect";
 import { RowGroupingModule, PivotModule, TreeDataModule, ServerSideRowModelModule, SetFilterModule } from 'ag-grid-enterprise';
 import { AllCommunityModule } from "ag-grid-community";
-import { Modal, Form, Spin, message, Button } from "antd";
+import { Modal, Form, Spin, message, Button, Empty } from "antd";
 import useScreenSize from '../common/useScreenSize';
 import { useTableHeader } from '../common/useTableHeader';
 import ActionCellRenderer from '../common/ActionCellRenderer';
-import { CategoriesDetails } from "../../components/APi/CategoryApi";
+import { CategoriesDetails } from "../../components/APi/Api";
+
 ModuleRegistry.registerModules([
   AllCommunityModule, 
   ExcelExportModule,
@@ -23,6 +24,7 @@ ModuleRegistry.registerModules([
   ServerSideRowModelModule,
   SetFilterModule
 ]);
+
 const Categorydetail = () => {
   const [rowData, setRowData] = useState([]);
   const [searchText, setSearchText] = useState("");
@@ -34,28 +36,51 @@ const Categorydetail = () => {
   const [editingRecord, setEditingRecord] = useState(null);
   const gridRef = useRef(null);
   const screenSize = useScreenSize(gridRef);
-  // Define fetchInvoiceData first so it can be used in handleRefreshData
-  const fetchInvoiceData = async () => {
-    setLoading(true);
+  const loadingRef = useRef(false); 
+  
+
+  const fetchInvoiceData = useCallback(async () => {
+    if (loadingRef.current) return;
+    
+    loadingRef.current = true;
+ 
+    
     try {
-      const response = await CategoriesDetails(); // Use global API function
-      console.log('API Response:', response.data.data);
-      const data = response.data.data;
+       // messageApi.loading({ content: 'Loading category data...', key: 'loadingData', duration: 0 });
+      
+      // await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const response = await CategoriesDetails();
+      
+      const data = response?.data?.data || [];
       setRowData(data);
       setFilteredData(data);
-      messageApi.success('Data loaded successfully');
+      
+       if (data.length > 0) {
+        messageApi.success({ content: 'Data loaded successfully', key: 'loadingData' });
+      } else {
+        messageApi.info({ content: 'No category data available', key: 'loadingData' });
+      }
     } catch (err) {
-      setError(err.message);
-      messageApi.error(`Failed to fetch data: ${err.message}`);
+      setError(err.message || 'Failed to fetch data');
+      messageApi.error({ content: `Failed to fetch data: ${err.message || 'Unknown error'}`, key: 'loadingData' });
       console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
+      // loadingRef.current = false;
     }
-  };
+  }, [messageApi]);
+
   // Define all handlers before they're used
   const handleRefreshData = useCallback(() => {
-    fetchInvoiceData();
-  }, []);
+    // Only trigger refresh if not already loading
+    if (!loadingRef.current) {
+      fetchInvoiceData();
+    } else {
+      messageApi.info('Data is currently loading');
+    }
+  }, [fetchInvoiceData, messageApi]);
+
   const handleExportPDF = useCallback(() => {
     const fileName = prompt("Enter file name for PDF:", "category-data");
     if (!fileName) return;
@@ -145,7 +170,7 @@ const Categorydetail = () => {
 
   // Now we can safely use all the handlers in useTableHeader
   const { renderMobileHeader, renderDesktopHeader } = useTableHeader({
-    title: "Category Management",
+    title: "Category Management 123",
     onRefresh: handleRefreshData,
     onExportExcel: handleExportExcel,
     onExportPDF: handleExportPDF,
@@ -209,28 +234,51 @@ const Categorydetail = () => {
 
   const popupParent = useMemo(() => document.body, []);
   
-  // Effect hooks
+  // Effect hooks - Only run once on mount with proper cleanup
   useEffect(() => {
+    // Set loading to true immediately to show loading state
+    setLoading(true);
     fetchInvoiceData();
-  }, []);
+    // Use a timeout to prevent component from unmounting before fetch completes
+    // const timeoutId = setTimeout(() => {
+      
+    // }, 0);
+    
+    return () => {
+    //  clearTimeout(timeoutId);
+      // Reset state on unmount
+      loadingRef.current = false;
+    };
+  }, [fetchInvoiceData]);
 
+  // Optimize filtering for better performance
   useEffect(() => {
-    if (!searchText.trim()) {
-      setFilteredData(rowData);
-      return;
-    }
+    const filterData = () => {
+      if (!searchText.trim()) {
+        setFilteredData(rowData);
+        return;
+      }
+      
+      const searchLower = searchText.toLowerCase();
+      const filtered = rowData.filter(row =>
+        (row.categoryId && row.categoryId.toString().toLowerCase().includes(searchLower)) ||
+        (row.category && row.category.toLowerCase().includes(searchLower))
+      );
+  
+      setFilteredData(filtered);
+    };
     
-    const searchLower = searchText.toLowerCase();
-    const filtered = rowData.filter(row =>
-      (row.categoryId && row.categoryId.toString().toLowerCase().includes(searchLower)) ||
-      (row.category && row.category.toLowerCase().includes(searchLower))
-    );
-
-    setFilteredData(filtered);
+    // Debounce search for better performance
+    const handler = setTimeout(() => {
+      filterData();
+      
+      // Update grid filters if grid is ready
+      if (gridRef.current && gridRef.current.api) {
+        gridRef.current.api.onFilterChanged();
+      }
+    }, 300);
     
-    if (gridRef.current && gridRef.current.api) {
-      gridRef.current.api.onFilterChanged();
-    }
+    return () => clearTimeout(handler);
   }, [searchText, rowData]);
 
   const modalFields = [
@@ -247,23 +295,62 @@ const Categorydetail = () => {
     }
   ];
   
+  // Split loading indicator into its own component for cleaner JSX
+  const renderLoadingState = () => (
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column',
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      padding: '80px 0',
+      minHeight: '400px',
+      background: '#f9f9f9',
+      borderRadius: '8px'
+    }}>
+      <Spin size="large" />
+      {/* <div style={{ marginTop: '20px', color: '#666' }}>
+        <h3 style={{ fontWeight: 'normal' }}>Loading category data...</h3>
+        <p>Please wait while we retrieve the category information.</p>
+      </div> */}
+    </div>
+  );
+
+  // Split error state into its own component
+  const renderErrorState = () => (
+    <div style={{ 
+      padding: '40px 20px', 
+      textAlign: 'center', 
+      background: '#fff1f0',
+      border: '1px solid #ffccc7',
+      borderRadius: '8px' 
+    }}>
+      <h3 style={{ color: '#cf1322', marginBottom: '15px' }}>Error Loading Data</h3>
+      <p style={{ color: '#555', marginBottom: '20px' }}>{error}</p>
+      <Button type="primary" onClick={handleRefreshData}>Try Again</Button>
+    </div>
+  );
+
+  // Empty state component
+  const renderEmptyState = () => (
+    <Empty
+      image={Empty.PRESENTED_IMAGE_SIMPLE}
+      description={
+        <span>
+          No categories found matching your search criteria
+        </span>
+      }
+    >
+      {/* <Button type="primary" onClick={() => AddnewModal(null)}>Add Category</Button> */}
+    </Empty>
+  );
+  
   return (
     <div className="category-management-container" style={{ padding: '10px', maxWidth: '100%' }}>
       {contextHolder}
       {/* Render appropriate header based on screen size */}
       {screenSize === 'xs' || screenSize === 'sm' ? renderMobileHeader() : renderDesktopHeader()}
-      {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '50px 0' }}>
-          <Spin size="large" tip="Loading category data..." />
-        </div>
-      ) : error ? (
-        <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
-          Error loading data: {error}
-          <div style={{ marginTop: '10px' }}>
-            <Button onClick={handleRefreshData}>Try Again</Button>
-          </div>
-        </div>
-      ) : (
+      
+      {loading ? renderLoadingState() : error ? renderErrorState() : (
         <div 
           id="myGrid" 
           className="ag-theme-alpine" 
@@ -273,31 +360,34 @@ const Categorydetail = () => {
             fontSize: screenSize === 'xs' ? '12px' : '14px'
           }}
         >
-          <AgGridReact
-            gridOptions={{ suppressMenuHide: true }}
-            columnDefs={columnDefs}
-            ref={gridRef}
-            rowData={filteredData}
-            defaultColDef={defaultColDef}
-            pagination={true}
-            popupParent={popupParent}
-            paginationPageSize={screenSize === 'xs' ? 5 : 10}
-            paginationPageSizeSelector={[5, 10, 20, 50, 100]}
-            domLayout='normal'
-            suppressCellFocus={true}
-            animateRows={true}
-            enableCellTextSelection={true}
-            onGridReady={params => {
-              params.api.sizeColumnsToFit();
-              if (screenSize === 'xs') {
-                params.api.setGridOption('rowHeight', 40);
-              }
-            }}
-            onFirstDataRendered={params => params.api.sizeColumnsToFit()}
-            overlayNoRowsTemplate="<span style='padding: 20px; display: inline-block;'>No categories found matching your search criteria</span>"
-          />
+          {filteredData.length === 0 ? renderEmptyState() : (
+            <AgGridReact
+              gridOptions={{ suppressMenuHide: true }}
+              columnDefs={columnDefs}
+              ref={gridRef}
+              rowData={filteredData}
+              defaultColDef={defaultColDef}
+              pagination={true}
+              popupParent={popupParent}
+              paginationPageSize={screenSize === 'xs' ? 5 : 10}
+              paginationPageSizeSelector={[5, 10, 20, 50, 100]}
+              domLayout='normal'
+              suppressCellFocus={true}
+              animateRows={true}
+              enableCellTextSelection={true}
+              onGridReady={params => {
+                params.api.sizeColumnsToFit();
+                if (screenSize === 'xs') {
+                  params.api.setGridOption('rowHeight', 40);
+                }
+              }}
+              onFirstDataRendered={params => params.api.sizeColumnsToFit()}
+              // overlayNoRowsTemplate="<span style='padding: 20px; display: inline-block;'>No categories found matching your search criteria</span>"
+            />
+          )}
         </div>
       )}
+      
       <GlobalModal
         visible={isModalVisible}
         title={editingRecord?.categoryId ? 'Edit Category' : 'Add New Category'}
@@ -309,4 +399,5 @@ const Categorydetail = () => {
     </div>
   );
 };
+
 export default Categorydetail;

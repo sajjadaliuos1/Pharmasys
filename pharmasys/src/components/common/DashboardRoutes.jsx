@@ -8,6 +8,7 @@ import Categorydetail from '../category/Categorydetail';
 import SubCategoryDetail from '../category/SubCategoryDetails';
 import SupplierDetails from '../supplier/SupplierDetails';
 import Purchase from '../purchase/purchase'; 
+import Dashboard from './Dashboard';
 
 function DashboardRoutes({ role }) {
   // Early return with redirect if no valid role
@@ -40,7 +41,7 @@ function DashboardRoutes({ role }) {
           <Route path="/salesrecord" element={<DashboardHome />} />
           <Route path="/salesreturn" element={<DashboardHome />} />
           <Route path="/customers" element={<CustomerDetails />} />
-          <Route path="/customerpayment" element={<DashboardHome />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </>
       )}
       
