@@ -5,15 +5,14 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { ExcelExportModule } from "ag-grid-enterprise";
 import { ModuleRegistry } from 'ag-grid-community';
-import GlobalModal from "../customhooks/GlobalModal";
-import CustomSelect from "../customhooks/CustomSelect";
 import { RowGroupingModule, PivotModule, TreeDataModule, ServerSideRowModelModule, SetFilterModule } from 'ag-grid-enterprise';
 import { AllCommunityModule } from "ag-grid-community";
-import { Modal, Form, Spin, message, Button, Empty } from "antd";
+import { Spin, message, Button, Empty, Space, Tooltip, Popconfirm } from "antd";
 import useScreenSize from '../common/useScreenSize';
 import { useTableHeader } from '../common/useTableHeader';
-import ActionCellRenderer from '../common/ActionCellRenderer';
-import { CategoriesDetails } from "../../components/APi/Api";
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { getCategories } from "../../components/Api/Api";
+import CategoryModal from './CategoryModol';
 
 ModuleRegistry.registerModules([
   AllCommunityModule, 
@@ -38,6 +37,101 @@ const Categorydetail = () => {
   const screenSize = useScreenSize(gridRef);
   const loadingRef = useRef(false); 
   
+  // Action handlers - defined early to avoid reference issues
+  const AddnewModal = useCallback((record) => {
+    setEditingRecord(record ? { ...record } : { typeId: '', typeName: '' });
+    setIsModalVisible(true);
+  }, []);
+
+  const handleEdit = useCallback((id) => {
+
+console.log
+
+    const record = rowData.find(item => item.typeId === id);
+    if (record) {
+      AddnewModal(record);
+    }
+  }, [AddnewModal, rowData]);
+
+  const handleDelete = useCallback((id) => {
+    console.log("Delete category id:", id);
+    // Add your delete API call here
+    // For example:
+    // axios.delete(`https://pos.idotsolution.com/api/Setting/categories/${id}`)
+    //   .then(() => {
+    //     messageApi.success('Category deleted successfully');
+    //     fetchInvoiceData(); // Refresh data after delete
+    //   })
+    //   .catch(err => {
+    //     messageApi.error(`Delete failed: ${err.message}`);
+    //   });
+    messageApi.success('Category deleted successfully');
+  }, [messageApi]);
+
+  // Define column definitions before using them in functions
+  const getColumnDefs = useCallback(() => {
+    return [
+      {
+        headerName: 'S.No',
+        valueGetter: (params) => params.node.rowIndex + 1, 
+        width: 80,
+        // cellStyle: { textAlign: 'center' },
+        pinned: 'left', 
+      },
+      {
+        headerName: "Category ID",
+        field: "typeId",
+        sortable: true,
+        filter: true,
+        minWidth: 140,
+        hide: screenSize === 'xs',
+      },
+      {
+        headerName: "Category Name",
+        field: "typeName",
+        sortable: true,
+        filter: true,
+        minWidth: 140,
+      },
+     
+      {
+        headerName: "Actions",
+        field: "actions",
+        sortable: false,
+        filter: false,
+        minWidth: 110,
+        cellRenderer: (params) => {
+          return (
+            <Space size="middle">
+              <Tooltip title={params.data.typeId}>
+                <Button 
+                  icon={<EditOutlined />} 
+                  text={params.data.typeId}
+                  onClick={() => handleEdit(params.data.typeId)} 
+                  size="small"
+                />
+              </Tooltip>
+              <Popconfirm
+                title="Are you sure you want to delete?"
+                onConfirm={() => handleDelete(params.data._id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button 
+                  icon={<DeleteOutlined />} 
+                  danger 
+                  size="small"
+                />
+              </Popconfirm>
+            </Space>
+          );
+        },
+        suppressSizeToFit: true,
+      }
+    ];
+  }, [screenSize, handleEdit, handleDelete]);
+  
+  const columnDefs = useMemo(() => getColumnDefs(), [getColumnDefs]);
 
   const fetchInvoiceData = useCallback(async () => {
     if (loadingRef.current) return;
@@ -50,8 +144,7 @@ const Categorydetail = () => {
       
       // await new Promise(resolve => setTimeout(resolve, 800));
       
-      const response = await CategoriesDetails();
-      
+      const response = await getCategories();
       const data = response?.data?.data || [];
       setRowData(data);
       setFilteredData(data);
@@ -71,7 +164,7 @@ const Categorydetail = () => {
     }
   }, [messageApi]);
 
-  // Define all handlers before they're used
+  // Other handlers defined after columnDefs
   const handleRefreshData = useCallback(() => {
     // Only trigger refresh if not already loading
     if (!loadingRef.current) {
@@ -89,6 +182,8 @@ const Categorydetail = () => {
     doc.text('Category Report', 14, 22);
     doc.setFontSize(11);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+    
+    // Use columnDefs safely now that it's defined
     const visibleCols = columnDefs.filter(col => !col.hide && col.field !== 'actions');
     const columns = visibleCols.map((col) => col.headerName || col.field);
     const rows = rowData.map((row) =>
@@ -103,7 +198,7 @@ const Categorydetail = () => {
       headStyles: { fillColor: [66, 139, 202] }
     });
     doc.save(`${fileName}.pdf`);
-  }, [rowData]);
+  }, [rowData, columnDefs]);
 
   const handleExportExcel = useCallback(() => {
     if (gridRef.current && gridRef.current.api) {
@@ -152,25 +247,9 @@ const Categorydetail = () => {
     }
   }, [messageApi, setAutoHeight, setFixedHeight, handleFullscreen]);
 
-  const AddnewModal = useCallback((record) => {
-    setEditingRecord(record ? { ...record } : { categoryId: '', category: '' });
-    setIsModalVisible(true);
-  }, []);
-
-  // Action handlers
-  const handleEdit = useCallback((data) => {
-    AddnewModal(data);
-  }, [AddnewModal]);
-
-  const handleDelete = useCallback((data) => {
-    console.log("Delete category:", data);
-    // Add your delete API call here
-    messageApi.success('Category deleted successfully');
-  }, [messageApi]);
-
   // Now we can safely use all the handlers in useTableHeader
   const { renderMobileHeader, renderDesktopHeader } = useTableHeader({
-    title: "Category Management 123",
+    title: "Category Management",
     onRefresh: handleRefreshData,
     onExportExcel: handleExportExcel,
     onExportPDF: handleExportPDF,
@@ -181,48 +260,6 @@ const Categorydetail = () => {
     rowData,
     screenSize
   });
-
-  // Get column definitions
-  const getColumnDefs = useCallback(() => {
-    return [
-      {
-        headerName: "Category ID",
-        field: "categoryId",
-        sortable: true,
-        filter: true,
-        minWidth: 140,
-        hide: screenSize === 'xs',
-      },
-      {
-        headerName: "Category Name",
-        field: "category",
-        sortable: true,
-        filter: true,
-        minWidth: 140,
-      },
-      {
-        headerName: "Actions",
-        field: "actions",
-        sortable: false,
-        filter: false,
-        minWidth: 110,
-        cellRenderer: (params) => (
-          <ActionCellRenderer 
-            data={params.data}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            isUpdate={false} 
-            editTooltip="Edit category"
-            deleteTooltip="Delete category"
-            deleteConfirmText="Are you sure you want to delete this category?"
-          />
-        ),
-        suppressSizeToFit: true,
-      }
-    ];
-  }, [screenSize, handleEdit, handleDelete]);
-  
-  const columnDefs = useMemo(() => getColumnDefs(), [getColumnDefs]);
   
   const defaultColDef = useMemo(() => ({
     enableRowGroup: true,
@@ -239,13 +276,8 @@ const Categorydetail = () => {
     // Set loading to true immediately to show loading state
     setLoading(true);
     fetchInvoiceData();
-    // Use a timeout to prevent component from unmounting before fetch completes
-    // const timeoutId = setTimeout(() => {
-      
-    // }, 0);
     
     return () => {
-    //  clearTimeout(timeoutId);
       // Reset state on unmount
       loadingRef.current = false;
     };
@@ -281,21 +313,9 @@ const Categorydetail = () => {
     return () => clearTimeout(handler);
   }, [searchText, rowData]);
 
-  const modalFields = [
-    {
-      name: 'category',
-      label: 'Category Name',
-      type: 'input',
-      rules: [{ required: true, message: 'Category name is required' }],
-    },
-    {
-      name: 'customSelectCategory',
-      label: 'Project Selection',
-      component: <CustomSelect />,
-    }
-  ];
   
-  // Split loading indicator into its own component for cleaner JSX
+  
+  // UI Components
   const renderLoadingState = () => (
     <div style={{ 
       display: 'flex', 
@@ -308,14 +328,9 @@ const Categorydetail = () => {
       borderRadius: '8px'
     }}>
       <Spin size="large" />
-      {/* <div style={{ marginTop: '20px', color: '#666' }}>
-        <h3 style={{ fontWeight: 'normal' }}>Loading category data...</h3>
-        <p>Please wait while we retrieve the category information.</p>
-      </div> */}
     </div>
   );
 
-  // Split error state into its own component
   const renderErrorState = () => (
     <div style={{ 
       padding: '40px 20px', 
@@ -330,7 +345,6 @@ const Categorydetail = () => {
     </div>
   );
 
-  // Empty state component
   const renderEmptyState = () => (
     <Empty
       image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -340,14 +354,13 @@ const Categorydetail = () => {
         </span>
       }
     >
-      {/* <Button type="primary" onClick={() => AddnewModal(null)}>Add Category</Button> */}
     </Empty>
   );
   
   return (
     <div className="category-management-container" style={{ padding: '10px', maxWidth: '100%' }}>
       {contextHolder}
-      {/* Render appropriate header based on screen size */}
+     
       {screenSize === 'xs' || screenSize === 'sm' ? renderMobileHeader() : renderDesktopHeader()}
       
       {loading ? renderLoadingState() : error ? renderErrorState() : (
@@ -382,19 +395,17 @@ const Categorydetail = () => {
                 }
               }}
               onFirstDataRendered={params => params.api.sizeColumnsToFit()}
-              // overlayNoRowsTemplate="<span style='padding: 20px; display: inline-block;'>No categories found matching your search criteria</span>"
             />
           )}
         </div>
       )}
       
-      <GlobalModal
+      <CategoryModal
         visible={isModalVisible}
-        title={editingRecord?.categoryId ? 'Edit Category' : 'Add New Category'}
+        title={editingRecord?.typeId ? `Edit Category` : 'Add New Category'}
         onCancel={() => setIsModalVisible(false)}
         initialValues={editingRecord}
-        fields={modalFields}
-        width={800}
+        
       />
     </div>
   );

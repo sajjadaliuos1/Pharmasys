@@ -1,38 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Layout, Menu, Button } from 'antd';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   DashboardOutlined,
   MedicineBoxOutlined,
-  ShoppingCartOutlined,
-  TeamOutlined,
-  SettingOutlined,
-  UserSwitchOutlined,
   AppstoreOutlined,
   ShopOutlined,
   UserOutlined,
-  ContactsOutlined,
   MenuOutlined,
+  UserSwitchOutlined,
+  SettingOutlined,
   ShoppingOutlined,
   ReconciliationOutlined,
-  RollbackOutlined,
   FileTextOutlined,
-  BarChartOutlined,
-  DollarCircleOutlined,
-  TransactionOutlined,
-  GoldOutlined,
-  PieChartOutlined,
-  LineChartOutlined,
-  CreditCardOutlined,
-  BankOutlined
+  BarChartOutlined
 } from '@ant-design/icons';
 import logo from "../../assets/images/logo.png";
 
 const { Sider } = Layout;
 
-function SideMenu({ collapsed, setCollapsed, role }) {
-  const location = useLocation();
+function SideMenu({ collapsed, setCollapsed,  currentPath }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const navigate = useNavigate();
   
   useEffect(() => {
     const handleResize = () => {
@@ -45,19 +34,30 @@ function SideMenu({ collapsed, setCollapsed, role }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  const roleMenuVisibility = {
-    role1: ['dashboard', 'setup', 'supplier', 'products', 'category', 'customers', 'sales', 'purchase', 'transactions'],
-    role2: ['dashboard', 'sales', 'customers', 'purchase', 'transactions'],
-    role3: ['dashboard', 'customers', 'setup', 'sales']
-  };
   
-  const allowedMenus = roleMenuVisibility[role] || [];
+  const allowedMenus = [
+    'dashboard',
+    'setup',
+    'category',
+    'products',
+    'purchase',
+    'sales'
+  ];
+
+  // Handle menu item click
+  const handleMenuClick = (path) => {
+    navigate(path);
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  };
   
   const menuItems = [
     allowedMenus.includes('dashboard') && {
       key: '/dashboard',
       icon: <DashboardOutlined />,
-      label: <Link to="/dashboard">Dashboard</Link>,
+      label: 'Dashboard',
+      onClick: () => handleMenuClick('/dashboard')
     },
     allowedMenus.includes('setup') && {
       key: 'settings',
@@ -67,22 +67,26 @@ function SideMenu({ collapsed, setCollapsed, role }) {
         {
           key: '/dashboard/settings/roles',
           icon: <UserSwitchOutlined />,
-          label: <Link to="/dashboard/settings/roles">Roles</Link>,
+          label: 'Roles',
+          onClick: () => handleMenuClick('/dashboard/settings/roles')
         },
         {
           key: '/dashboard/settings/category',
           icon: <AppstoreOutlined />,
-          label: <Link to="/dashboard/settings/category">Category</Link>,
+          label: 'Category',
+          onClick: () => handleMenuClick('/dashboard/settings/category')
         },
         {
           key: '/dashboard/settings/shops',
           icon: <ShopOutlined />,
-          label: <Link to="/dashboard/settings/shops">Shops</Link>,
+          label: 'Shops',
+          onClick: () => handleMenuClick('/dashboard/settings/shops')
         },
         {
           key: '/dashboard/settings/employees',
           icon: <UserOutlined />,
-          label: <Link to="/dashboard/settings/employees">Employee</Link>,
+          label: 'Employee',
+          onClick: () => handleMenuClick('/dashboard/settings/employees')
         }
       ]
     },
@@ -93,14 +97,10 @@ function SideMenu({ collapsed, setCollapsed, role }) {
       label: 'Categories',
       children: [
         {
-          key: '/dashboard/category',
+          key: '/category',
           icon: <AppstoreOutlined />,
-          label: <Link to="/dashboard/category">Category</Link>,
-        },
-        {
-          key: '/dashboard/subcategory',
-          icon: <AppstoreOutlined />,
-          label: <Link to="/dashboard/subcategory">Subcategory</Link>,
+          label: 'Category',
+          onClick: () => handleMenuClick('/category')
         },
       ]
     },
@@ -110,24 +110,10 @@ function SideMenu({ collapsed, setCollapsed, role }) {
       label: 'Products',
       children: [
         {
-          key: '/dashboard/products',
+          key: '/products',
           icon: <MedicineBoxOutlined />,
-          label: <Link to="/dashboard/products">Product</Link>,
-        },
-        {
-          key: '/dashboard/productstock',
-          icon: <ReconciliationOutlined />,
-          label: <Link to="/dashboard/productstock">Product Stock</Link>,
-        },
-        {
-          key: '/dashboard/productlowstock',
-          icon: <BarChartOutlined />,
-          label: <Link to="/dashboard/productlowstock">Product Low Stock</Link>,
-        },
-        {
-          key: '/dashboard/productrate',
-          icon: <DollarCircleOutlined />,
-          label: <Link to="/dashboard/productrate">Product Rate</Link>,
+          label: 'Product',
+          onClick: () => handleMenuClick('/products')
         },
       ]
     },
@@ -137,102 +123,29 @@ function SideMenu({ collapsed, setCollapsed, role }) {
       label: 'Purchase',
       children: [
         {
-          key: '/dashboard/purchase',
+          key: '/purchase',
           icon: <ShoppingOutlined />,
-          label: <Link to="/dashboard/purchase">Purchase</Link>,
-        },
-        {
-          key: '/dashboard/purchaserecord',
-          icon: <FileTextOutlined />,
-          label: <Link to="/dashboard/purchaserecord">Purchase Record</Link>,
-        },
-        {
-          key: '/dashboard/purchasereturn',
-          icon: <RollbackOutlined />,
-          label: <Link to="/dashboard/purchasereturn">Return</Link>,
-        },
-        {
-          key: '/dashboard/purchasereturnrecord',
-          icon: <ReconciliationOutlined />,
-          label: <Link to="/dashboard/purchasereturnrecord">Return Record</Link>,
-        },
-      ]
-    },
-    allowedMenus.includes('supplier') && {
-      key: 'supplier',
-      icon: <ContactsOutlined />,
-      label: "Supplier",
-      children: [
-        {
-          key: '/dashboard/supplier',
-          icon: <ContactsOutlined />,
-          label: <Link to="/dashboard/supplier">Suppliers</Link>,
-        },
-        {
-          key: '/dashboard/supplierpayment',
-          icon: <CreditCardOutlined />,
-          label: <Link to="/dashboard/supplierpayment">Supplier Payment</Link>,
-        },
-      ]
-    },
-    allowedMenus.includes('customers') && {
-      key: 'customers',
-      icon: <TeamOutlined />,
-      label: 'Customers',
-      children: [
-        {
-          key: '/dashboard/customers',
-          icon: <TeamOutlined />,
-          label: <Link to="/dashboard/customers">Customers</Link>,
-        },
-        {
-          key: '/dashboard/customerpayment',
-          icon: <CreditCardOutlined />,
-          label: <Link to="/dashboard/customerpayment">Customer Payment</Link>,
+          label: 'Purchase',
+          onClick: () => handleMenuClick('/purchase')
         },
       ]
     },
     allowedMenus.includes('sales') && {
       key: 'sales',
-      icon: <ShoppingCartOutlined />,
+      icon: <ReconciliationOutlined />,
       label: 'Sales',
       children: [
         {
-          key: '/dashboard/sales',
-          icon: <ShoppingCartOutlined />,
-          label: <Link to="/dashboard/sales">Sale</Link>,
-        },
-        {
-          key: '/dashboard/salesrecord',
+          key: '/salesrecord',
           icon: <FileTextOutlined />,
-          label: <Link to="/dashboard/salesrecord">Sale Record</Link>,
+          label: 'Sales Record',
+          onClick: () => handleMenuClick('/salesrecord')
         },
         {
-          key: '/dashboard/salesreturn',
-          icon: <RollbackOutlined />,
-          label: <Link to="/dashboard/salesreturn">Return</Link>,
-        },
-      ]
-    },
-    allowedMenus.includes('transactions') && {
-      key: 'transactions',
-      icon: <TransactionOutlined />,
-      label: 'Transactions',
-      children: [
-        {
-          key: '/dashboard/dailysales',
-          icon: <LineChartOutlined />,
-          label: <Link to="/dashboard/dailysales">Daily Sales</Link>,
-        },
-        {
-          key: '/dashboard/dailyprofit',
-          icon: <GoldOutlined />,
-          label: <Link to="/dashboard/dailyprofit">Daily Profit</Link>,
-        },
-        {
-          key: '/dashboard/profitsummary',
-          icon: <PieChartOutlined />,
-          label: <Link to="/dashboard/profitsummary">Profit Summary</Link>,
+          key: '/salesreport',
+          icon: <BarChartOutlined />,
+          label: 'Sales Report',
+          onClick: () => handleMenuClick('/salesreport')
         },
       ]
     },
@@ -327,8 +240,8 @@ function SideMenu({ collapsed, setCollapsed, role }) {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={[location.pathname]}
-          selectedKeys={[location.pathname]}
+          defaultSelectedKeys={[currentPath]}
+          selectedKeys={[currentPath]}
           items={menuItems}
         />
       </Sider>

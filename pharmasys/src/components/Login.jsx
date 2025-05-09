@@ -1,37 +1,37 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Card, Typography, message } from 'antd';
+
+
+import { Form, Input, Button, Card, Typography, } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
 
-function Login({ onLogin }) {
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // <-- for navigation
+function Login() {
+ // const [loading, setLoading] = useState(false);
+  //const navigate = useNavigate(); // <-- for navigation
 
-  const onFinish = (values) => {
-    setLoading(true);
+  // const onFinish = (values) => {
+  //   setLoading(true);
 
-    const users = {
-      admin: { password: '123', role: 'role1' },
-      manager: { password: '123', role: 'role2' },
-      staff: { password: '123', role: 'role3' },
-    };
+  //   const users = {
+  //     admin: { password: '123', role: 'role1' },
+  //     manager: { password: '123', role: 'role2' },
+  //     staff: { password: '123', role: 'role3' },
+  //   };
 
-    setTimeout(() => {
-      const user = users[values.username];
+  //   setTimeout(() => {
+  //     const user = users[values.username];
 
-      if (user && user.password === values.password) {
-        message.success('Login successful!');
-        onLogin({ username: values.username, role: user.role });
-        navigate('/dashboard'); // <-- redirect to dashboard
-      } else {
-        message.error('Invalid username or password!');
-      }
+  //     if (user && user.password === values.password) {
+  //       message.success('Login successful!');
+  //       onLogin({ username: values.username, role: user.role });
+  //       navigate('/dashboard'); // <-- redirect to dashboard
+  //     } else {
+  //       message.error('Invalid username or password!');
+  //     }
 
-      setLoading(false);
-    }, 1000);
-  };
+  //     setLoading(false);
+  //   }, 1000);
+  // };
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f0f2f5' }}>
@@ -41,7 +41,7 @@ function Login({ onLogin }) {
           <Typography.Text type="secondary">Pharmaceutical Management System</Typography.Text>
         </div>
 
-        <Form name="login" initialValues={{ remember: true }} onFinish={onFinish} size="large">
+        <Form name="login" initialValues={{ remember: true }} size="large">
           <Form.Item name="username" rules={[{ required: true, message: 'Please input your Username!' }]}>
             <Input prefix={<UserOutlined />} placeholder="Username" />
           </Form.Item>
@@ -49,7 +49,7 @@ function Login({ onLogin }) {
             <Input.Password prefix={<LockOutlined />} placeholder="Password" />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading} style={{ width: '100%' }}>
+            <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
               Log in
             </Button>
           </Form.Item>

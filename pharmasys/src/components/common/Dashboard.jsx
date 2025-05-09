@@ -3,42 +3,42 @@ import { Layout, Alert, Spin } from 'antd';
 import SideMenu from './SideMenu';
 import Header from './Header';
 import DashboardRoutes from './DashboardRoutes';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const { Content } = Layout;
 
 function Dashboard({ user, onLogout }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [showAlert, setShowAlert] = useState(true); // for success message
+  const [collapsed, setCollapsed] = useState(() => {
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    return savedState ? JSON.parse(savedState) : false;
+  });
+  const [showAlert, setShowAlert] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [initialLoading, setInitialLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   
-  // Check for user authentication
+  // Store sidebar state in localStorage
   useEffect(() => {
-    if (!user) {
-      console.log('No user found, redirecting to login');
-      navigate('/login');
-    }
-  }, [user, navigate]);
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(collapsed));
+  }, [collapsed]);
   
-  // Handle window resize for responsive layout
+  // Handle responsive design
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      if (mobile) {
-        setCollapsed(true); // Auto-collapse on mobile
+      if (mobile && !collapsed) {
+        setCollapsed(true);
       }
     };
     
     window.addEventListener('resize', handleResize);
-    handleResize(); // Check on initial load
+    handleResize(); 
     
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [collapsed]);
   
-  // Auto-close success alert after 3 seconds
+  // Welcome alert management
   useEffect(() => {
     if (user) {
       setShowAlert(true);
@@ -49,47 +49,19 @@ function Dashboard({ user, onLogout }) {
     }
   }, [user]);
   
-  // Simulate dashboard data loading
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        // Simulate API data loading
-        await new Promise(resolve => setTimeout(resolve, 800));
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-    
-    loadDashboardData();
-  }, []);
-  
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
   };
   
   const handleLogout = () => {
-    onLogout(); // Call the logout handler from App component
+    if (onLogout) {
+      onLogout(); 
+    }
     navigate('/login');
   };
   
-  // Safely access role with fallback
-  const role = user?.role || '';
-  
-  const getLoginMessage = () => {
-    switch (role) {
-      case 'role1': return 'Admin login successful';
-      case 'role2': return 'Manager login successful';
-      case 'role3': return 'Staff login successful';
-      default: return 'Login successful';
-    }
-  };
-  
-  // If no user, show loading or redirect
-  if (!user) {
-    return <div>Checking authentication...</div>;
-  }
+  // Default to guest role if user role not specified
+  const role = user?.role || 'guest'; 
   
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -97,6 +69,7 @@ function Dashboard({ user, onLogout }) {
         collapsed={collapsed}
         role={role}
         setCollapsed={setCollapsed}
+        currentPath={location.pathname}
       />
       <Layout style={{
         marginLeft: isMobile ? 0 : (collapsed ? 80 : 200),
@@ -109,13 +82,15 @@ function Dashboard({ user, onLogout }) {
           isMobile={isMobile}
           user={user}
         />
-        {showAlert && (
+        {user && showAlert && (
           <Alert
-            message={getLoginMessage()}
+            message={`Welcome ${user.name || 'User'}!`}
+            description="You have successfully logged in to the dashboard."
             type="success"
             showIcon
             closable
             style={{ marginBottom: 16 }}
+            onClose={() => setShowAlert(false)}
           />
         )}
         <Content style={{
@@ -125,18 +100,7 @@ function Dashboard({ user, onLogout }) {
           background: '#fff',
           marginTop: isMobile ? '64px' : '24px'
         }}>
-          {initialLoading ? (
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              height: '50vh'
-            }}>
-              <Spin size="large" tip="Loading dashboard data..." />
-            </div>
-          ) : (
-            <DashboardRoutes role={role} />
-          )}
+          <DashboardRoutes user={user} />
         </Content>
       </Layout>
       
